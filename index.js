@@ -20,8 +20,12 @@ io.on('connection', function(socket){
         let msgArray = msg.split(" ");
         if (msg.indexOf("/nick ") >= 0 && msgArray.length >= 1) { // Change nick
             let oldName = socket.username;
+            let indexOldName = usersConnected.indexOf(oldName);
+            delete usersConnected[indexOldName];
             let arrayLength = msgArray.length;
             socket.username = msgArray.slice(1, arrayLength).join(" ");
+            usersConnected.push(socket.username);
+            io.emit('updateusers', usersConnected);
             socket.emit('assignednickname', socket.username, socket.colour);
             io.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', 'user ' + oldName +
                 ' has changed nickname to ' + socket.username, "#000000");
@@ -61,7 +65,10 @@ io.on('connection', function(socket){
     // Handling user disconnecting
     socket.on('disconnect', function(){
         // remove the username from global usernames list
+
         delete usersConnected[socket.username];
+        let indexOldName = usersConnected.indexOf(socket.username);
+        delete usersConnected[indexOldName];
         // update list of users in chat, client-side
         io.emit('updateusers', usersConnected);
         // echo globally that this client has left
