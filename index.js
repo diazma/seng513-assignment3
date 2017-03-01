@@ -54,6 +54,18 @@ io.on('connection', function(socket){
         socket.emit('assignednickname', socket.username, socket.colour);
         socket.emit('updatechat', '', 'SERVER NOTIFICATION', 'You are user: ' + socket.username, "#000000");
         io.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', socket.username + ' has connected to chat', "#000000");
+        io.emit('updateusers', usersConnected);
+
+    });
+
+    // Handling user disconnecting
+    socket.on('disconnect', function(){
+        // remove the username from global usernames list
+        delete usersConnected[socket.username];
+        // update list of users in chat, client-side
+        io.emit('updateusers', usersConnected);
+        // echo globally that this client has left
+        io.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', socket.username + ' has disconnected');
     });
 
 });

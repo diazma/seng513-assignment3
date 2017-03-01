@@ -17,12 +17,12 @@ $(function() {
                 + username + ':</span> ' + msg + '</b>'));
         }
         else {
-            $('#messages').append($('<li>').html(timestamp + ' ' + '<span style="color: '+ colour + '">'
+            $('#messages').append($('<li>').html(timestamp + ' ' + '<span style="color: ' + colour + '">'
                 + username + ':</span> ' + msg));
         }
 
     });
-
+    // Assigning nick and colour for usernick
     socket.on('assignednickname', function(nickname, hexColour) {
         if (nickname) {
             currentNickname = nickname;
@@ -32,6 +32,25 @@ $(function() {
         }
 
     });
+
+    // Adding users to the list of connected users
+    socket.on('updateusers', function(usernameList){
+        // Empty the current users displayed
+        $('#user-list').empty();
+
+        // Add the fresh list of users connected
+        for (var i = 0; i < usernameList.length; i++) {
+            if (usernameList[i] == currentNickname) {
+                $('#user-list').append($('<li>').html('<b>' + usernameList[i] + ' (You)</b>'));
+            }
+            else {
+                $('#user-list').append($('<li>').html(usernameList[i]));
+            }
+        }
+
+
+    });
+
 
     // User has joined to the chat upon connect
     socket.on('connect', function() {
