@@ -57,4 +57,24 @@ $(function() {
         socket.emit('userjoined');
     });
 
+    // After connection, listen to receive old messages
+    socket.on('loadmessages', function(messageLog) {
+        // Remove any messages if any
+        $('#messages').empty();
+
+        // Place all the messages
+        for (var i =0; i < messageLog.length; i++) {
+            if (messageLog[i].username == currentNickname) {
+                $('#messages').append($('<li>').html('<b>' + messageLog[i].timestamp + ' '
+                    + '<span style="color: '+ currentColour + '">'
+                    + messageLog[i].username + ':</span> ' + messageLog[i].message + '</b>'));
+            }
+            else {
+                $('#messages').append($('<li>').html(messageLog[i].timestamp + ' ' + '<span style="color: '
+                    + messageLog[i].colour + '">'
+                    + messageLog[i].name + ':</span> ' + messageLog[i].message));
+            }
+        }
+    });
+
 });
