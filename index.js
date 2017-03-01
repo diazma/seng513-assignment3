@@ -10,9 +10,16 @@ http.listen( port, function () {
 
 app.use(express.static(__dirname + '/public'));
 
+var usernames = {};
 // listen to 'chat' messages
 io.on('connection', function(socket){
-    socket.on('chat', function(msg){
-	io.emit('chat', msg);
+    socket.on('sendmessage', function(msg){
+	io.emit('updatechat', Date().toString().split(' ')[4], socket.username, msg);
     });
+
+    socket.on('userjoined', function(username) {
+        socket.username = username;
+        usernames[username] = username;
+        io.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', username + ' has connected to chat');
+    })
 });
