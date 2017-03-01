@@ -9,7 +9,8 @@ http.listen( port, function () {
 });
 
 app.use(express.static(__dirname + '/public'));
-
+var usersConnected = [];
+var usersAvailable = ["Ruby", "Toulouse", "Dexter", "Mr. Mittens", "Warren the office cat"];
 var usernames = {};
 // listen to 'chat' messages
 io.on('connection', function(socket){
@@ -17,9 +18,16 @@ io.on('connection', function(socket){
 	io.emit('updatechat', Date().toString().split(' ')[4], socket.username, msg);
     });
 
-    socket.on('userjoined', function(username) {
-        socket.username = username;
-        usernames[username] = username;
-        io.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', username + ' has connected to chat');
-    })
+    // Assign a random username
+    socket.on('userjoined', function() {
+
+        let index = Math.floor(Math.random()*usersAvailable.length)
+        usersConnected.push(usersAvailable[index]);
+        socket.username = usersAvailable[index];
+        usersAvailable.splice(index, 1);
+        io.emit('assign-nick', socket.username);
+        socket.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', 'You are user: ' + socket.username );
+        io.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', socket.username + ' has connected to chat');
+    });
+
 });
