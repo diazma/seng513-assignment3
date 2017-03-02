@@ -2,6 +2,32 @@
 
 var currentNickname = null;
 var currentColour = null;
+
+
+function createCookie(username) {
+
+    var date = new Date();
+    date.setTime(date.getTime() + (7*24*60*60*1000));
+    let expires = "; expires=" + date.toUTCString();
+    document.cookie = "username=" + username + expires + "; path=/";
+}
+
+function readCookie() {
+    var usernameString = "username=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(usernameString) == 0) return c.substring(usernameString.length,c.length);
+    }
+    return null;
+}
+
+function deleteCookie() {
+    let expires = "; expires=-1";
+    document.cookie = "username=''" + expires + "; path=/";
+}
+
 $(function() {
     var socket = io.connect('http://localhost:3000');
         $('form').submit(function(){
@@ -22,10 +48,19 @@ $(function() {
         }
 
     });
+
+    // Delete cookie
+    socket.on('destroy-cookie', function() {
+        deleteCookie();
+    });
+
     // Assigning nick and colour for usernick
     socket.on('assignednickname', function(nickname, hexColour) {
         if (nickname) {
             currentNickname = nickname;
+            if (!readCookie() || nickname !== readCookie() ) {
+                createCookie(nickname);
+            }
         }
         if (hexColour) {
             currentColour = hexColour;
@@ -54,7 +89,14 @@ $(function() {
 
     // User has joined to the chat upon connect
     socket.on('connect', function() {
-        socket.emit('userjoined');
+        let previousName = readCookie();
+        if (previousName) {
+            socket.emit('user-reconnected', previousName);
+        }
+        else {
+            socket.emit('userjoined');
+        }
+
     });
 
     // After connection, listen to receive old messages
