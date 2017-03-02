@@ -10,8 +10,7 @@ http.listen( port, function () {
 
 app.use(express.static(__dirname + '/public'));
 var usersConnected = [];
-var coloursUsed = [];
-var usersAvailable = ["Ruby", "Toulouse", "Dexter", "Mr. Mittens", "Warren the office cat", "Bobo the cat", "Garfield"];
+var usersAvailable = ["Ruby", "Toulouse", "Dexter", "Mr. Mittens", "Warren the office cat"];
 var availableColours = ["#ff3399", "#6600ff", "#339933", "#ff9900", "#cc0000"];
 
 var messageLog = [];
@@ -44,11 +43,16 @@ io.on('connection', function(socket){
                 // Change the nickname
                 let oldName = socket.username;
                 let indexOldName = usersConnected.indexOf(oldName);
-                delete usersConnected[indexOldName];
+                usersConnected.splice(indexOldName, 1);
                 socket.username = newUserNick;
                 usersConnected.push(socket.username);
-                io.emit('updateusers', usersConnected);
+
+                // Update the assigned user name to the client
                 socket.emit('assignednickname', socket.username, socket.colour);
+
+                // Update the user list to include change of nick of current user
+                io.emit('updateusers', usersConnected);
+                // Notify everyone that client changed his nickname
                 io.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', 'user ' + oldName +
                     ' has changed nickname to ' + socket.username, "#000000");
             }
@@ -106,6 +110,7 @@ io.on('connection', function(socket){
     // Handling users reconnecting
     socket.on('user-reconnected', function(previousName) {
         socket.username = previousName;
+
         if (usersConnected.indexOf(previousName) >=0) {
             // User already connected, don't do anything but load messages and update users
             socket.emit('assignednickname', socket.username, socket.colour);
@@ -118,25 +123,26 @@ io.on('connection', function(socket){
             // Remove old name from available user nick
             let nickIndex = usersAvailable.indexOf(previousName);
             if (nickIndex >=0) {
-                delete usersAvailable[nickIndex];
+                usersAvailable.splice(nickIndex, 1);
             }
 
             // Add user reconnected
             usersConnected.push(previousName);
 
-            // Assign a colour and remove it from list of availabel colours
-            let colorIndex = Math.floor(Math.random()*usersAvailable.length);
+            // Assign a colour and remove it from list of available colours
+            let colorIndex = Math.floor(Math.random()*availableColours.length);
             socket.colour = availableColours[colorIndex];
-            delete availableColours[colorIndex];
+            availableColours.splice(colorIndex, 1);
 
             // Let the client know their assigned nickname and colour
             socket.emit('destroy-cookie');
+
             socket.emit('assignednickname', socket.username, socket.colour);
             // Sent the history of all messages
             socket.emit('loadmessages', messageLog);
 
             // Let user know the nickname
-            socket.emit('updatechat', '', 'SERVER NOTIFICATION', 'Reconnected as user ' + socket.username, "#000000");
+            socket.emit('updatechat', Date().toString().split(' ')[4], 'SERVER NOTIFICATION', 'Reconnected as user ' + socket.username, "#000000");
 
             // Let other users know user joined
             io.emit('updatechat', Date().toString().split(' ')[4], 'SERVER', socket.username + ' has re-connected to chat', "#000000");
@@ -151,10 +157,9 @@ io.on('connection', function(socket){
     socket.on('disconnect', function(){
         // remove the username from global usersConnected list
 
-        delete usersConnected[socket.username];
         let indexOldName = usersConnected.indexOf(socket.username);
         usersAvailable.push(socket.username);
-        delete usersConnected[indexOldName];
+        usersConnected.splice(indexOldName,1);
 
         // Add back the colour that was used for the nick
         availableColours.push(socket.colour);
