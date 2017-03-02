@@ -34,13 +34,16 @@ form button {
     list-style-type: none;
     margin: 0; padding: 0;
     width: 70%;
-    height: 90%;
     display: inline-block;
     float: left;
+    position: fixed;
+    bottom: 0;
+    padding-bottom: 40px;
 }
 
+
 #message-container {
-    background-color: lightskyblue;
+    position: relative;
 }
 
 #messages li {
@@ -55,8 +58,12 @@ form button {
 
 #users-connected {
     background-color: plum;
-    width: 30%;
+    width: 29%;
     display: inline-block;
     float: right;
     padding: 2px;
+    height: 100%;
+    bottom: 0;
+    position: fixed;
+    right: 0;
 }
