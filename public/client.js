@@ -1,34 +1,44 @@
 // shorthand for $(document).ready(...)
 
-var currentNickname = null;
-var currentColour = null;
-
-
-function createCookie(username) {
-
-    var date = new Date();
-    date.setTime(date.getTime() + (7*24*60*60*1000));
-    let expires = "; expires=" + date.toUTCString();
-    document.cookie = "username=" + username + expires + "; path=/";
-}
-
-function readCookie() {
-    var usernameString = "username=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1,c.length);
-        if (c.indexOf(usernameString) == 0) return c.substring(usernameString.length,c.length);
-    }
-    return null;
-}
-
-function deleteCookie() {
-    let expires = "; expires=-1";
-    document.cookie = "username=''" + expires + "; path=/";
-}
 
 $(function() {
+    var currentNickname = null;
+    var currentColour = null;
+
+
+    function createCookie(username) {
+
+        var date = new Date();
+        date.setTime(date.getTime() + (7*24*60*60*1000));
+        let expires = "; expires=" + date.toUTCString();
+        document.cookie = "username=" + username + expires + "; path=/";
+    }
+
+    function readCookie() {
+        var usernameString = "username=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(usernameString) == 0) return c.substring(usernameString.length,c.length);
+        }
+        return null;
+    }
+
+    function deleteCookie() {
+        let expires = "; expires=-1";
+        document.cookie = "username=''" + expires + "; path=/";
+    }
+
+    function positionMessages() {
+        var containerHeight = $('#messages-container').height();
+        var messagesHeight = $('#messages').height();
+        $('#messages').css('margin-top', Math.max(0, containerHeight-messagesHeight));
+        $('#messages-container').scrollTop($('#messages-container').prop('scrollHeight'));
+    }
+
+    $(window).on('resize', positionMessages);
+
     var socket = io.connect('http://localhost:3000');
         $('form').submit(function(){
             // Sending messages to the server
@@ -47,6 +57,7 @@ $(function() {
                 + username + ':</span> ' + msg));
         }
 
+        positionMessages();
     });
 
     // Delete cookie
@@ -76,7 +87,7 @@ $(function() {
         // Add the fresh list of users connected
         for (var i = 0; i < usernameList.length; i++) {
             if (usernameList[i] == currentNickname) {
-                $('#user-list').append($('<li>').html('<b>' + usernameList[i] + ' (You)</b>'));
+                $('#user-list').append($('<li>').html('<span id="you">' + usernameList[i] + ' (You)</span>'));
             }
             else {
                 $('#user-list').append($('<li>').html(usernameList[i]));
